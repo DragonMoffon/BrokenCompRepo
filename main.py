@@ -168,15 +168,16 @@ def load_buffer_triangles(triangle, points):
 def load_buffer_vornoi(data, points):
     for vornoi_polygon in data:
         base_point = points[vornoi_polygon[0]]
-        print(base_point)
         color = (base_point[0]+1.5)/3, (base_point[1]+1.5)/3, 0.5
-        print('vornoi')
-        for vertex in vornoi_polygon[1]:
-            print(vertex)
-            for coord in vertex:
-                yield coord
-            for rgb_value in color:
-                yield round(rgb_value, 2)
+        prev_point = vornoi_polygon[1][0]
+        for vertex in vornoi_polygon[1][1:]:
+            triangle = base_point, prev_point, vertex
+            for point in triangle:
+                for coord in point:
+                    yield coord
+                for rgb_value in color:
+                    yield round(rgb_value, 2)
+            prev_point = vertex
 
 
 class MapWindow(arcade.Window):

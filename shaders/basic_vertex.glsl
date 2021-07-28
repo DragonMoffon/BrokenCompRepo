@@ -1,13 +1,13 @@
-#version 420
+#version 330
 
 in vec2 inPos;
-in vec3 inColor;
+in vec2 inBiomeUV;
 
 out vec4 color;
+out vec2 biomeUV;
 
 void main()
 {
-    color = vec4(inColor, 1);
-
     gl_Position = vec4(inPos, 0, 1);
+    biomeUV = inBiomeUV;
 }

@@ -6,17 +6,17 @@ EDGE_STACK = [None] * 512
 
 class Delaunator:
 
-    def __init__(self,points):
+    def __init__(self, points):
         n = len(points)
 
         if len(points) < 3:
             raise ValueError("Need at least 3 points")
         coords = [None] * n * 2
 
-        for i in range(0,n):
+        for i in range(0, n):
             p = points[i]
             coords[2 * i] = (p[0])
-            coords[2 * i+1] = (p[1])
+            coords[2 * i + 1] = (p[1])
         triangles = self.constructor(coords)
 
     def constructor(self, coords):
@@ -31,13 +31,13 @@ class Delaunator:
 
         # temporary arrays for tracking the edges of the advancing convex hull
         self.hashSize = math.ceil(math.sqrt(n))
-        self.hullPrev = [None] * n # edge to prev edge
-        self.hullNext = [None] * n # edge to next edge
-        self.hullTri = [None] * n # edge to adjacent triangle
-        self.hullHash = [-1] * self.hashSize # angular edge hash
+        self.hullPrev = [None] * n  # edge to prev edge
+        self.hullNext = [None] * n  # edge to next edge
+        self.hullTri = [None] * n  # edge to adjacent triangle
+        self.hullHash = [-1] * self.hashSize  # angular edge hash
 
         # temporary arrays for sorting points
-        self._ids =  [None] * n
+        self._ids = [None] * n
         self._dists = [None] * n
         triangles = self.update(coords)
 
@@ -52,7 +52,7 @@ class Delaunator:
         maxX = -math.inf
         maxY = -math.inf
 
-        for i in range(0,n):
+        for i in range(0, n):
             x = coords[2 * i]
             y = coords[2 * i + 1]
             if (x < minX): minX = x
@@ -70,7 +70,7 @@ class Delaunator:
         i2 = 0
 
         # pick a seed point close to the center
-        for i in range(0,n):
+        for i in range(0, n):
             d = dist(cx, cy, coords[2 * i], coords[2 * i + 1])
 
             if (d < minDist):
@@ -82,7 +82,7 @@ class Delaunator:
         minDist = math.inf
 
         # find the point closest to the seed
-        for i in range(0,n):
+        for i in range(0, n):
             if (i == i0): continue
             d = dist(i0x, i0y, coords[2 * i], coords[2 * i + 1])
 
@@ -96,7 +96,7 @@ class Delaunator:
         minRadius = math.inf
 
         # find the third point which forms the smallest circumcircle with the first two
-        for i in range(0,n):
+        for i in range(0, n):
             if (i == i0 or i == i1): continue
             r = circumradius(i0x, i0y, i1x, i1y, coords[2 * i], coords[2 * i + 1])
 
@@ -110,25 +110,25 @@ class Delaunator:
         if (minRadius == math.inf):
             # order collinear points by dx (or dy if all x are identical)
             # and return the list as a hull
-            for i in range(0,n):
+            for i in range(0, n):
                 self._dists[i] = (coords[2 * i] - coords[0]) or (coords[2 * i + 1] - coords[1])
 
             quicksort(self._ids, self._dists, 0, n - 1)
-            hull =  [None] * n
+            hull = [None] * n
             j = 0
             d0 = -math.inf
 
-            for i in range(0,n):
+            for i in range(0, n):
                 id = self._ids[i]
 
                 if (self._dists[id] > d0):
                     hull[j] = id
-                    j+=1
+                    j += 1
                     d0 = self._dists[id]
 
             self.hull = hull[0:j]
-            self.triangles =  []
-            self.halfedges =  []
+            self.triangles = []
+            self.halfedges = []
 
         # swap the order of the seed points for counter-clockwise orientation
         if (orient(i0x, i0y, i1x, i1y, i2x, i2y)):
@@ -146,7 +146,7 @@ class Delaunator:
         self._cx = center[0]
         self._cy = center[1]
 
-        for i in range(0,n):
+        for i in range(0, n):
             self._dists[i] = dist(coords[2 * i], coords[2 * i + 1], center[0], center[1])
 
         # sort the points by distance from the seed triangle circumcenter
@@ -171,10 +171,10 @@ class Delaunator:
         self.trianglesLen = 0
         self._addTriangle(i0, i1, i2, -1, -1, -1)
 
-        xp=0
-        yp=0
+        xp = 0
+        yp = 0
 
-        for k in range(0,len(self._ids)):
+        for k in range(0, len(self._ids)):
             i = self._ids[k]
             x = coords[2 * i]
             y = coords[2 * i + 1]
@@ -192,7 +192,7 @@ class Delaunator:
             start = 0
             key = self._hashKey(x, y)
 
-            for j in range(0,self.hashSize):
+            for j in range(0, self.hashSize):
                 start = self.hullHash[(key + j) % self.hashSize]
                 if (start != -1 and start != self.hullNext[start]): break
 
@@ -208,15 +208,15 @@ class Delaunator:
                     e = -1
                     break
 
-            if (e == -1): continue # likely a near-duplicate point; skip it
+            if (e == -1): continue  # likely a near-duplicate point; skip it
 
             # add the first triangle from the point
             t = self._addTriangle(e, i, self.hullNext[e], -1, -1, self.hullTri[e])
 
             # recursively flip triangles from the point until they satisfy the Delaunay condition
-            self.hullTri[i] = self._legalize(t + 2,coords)
-            self.hullTri[e] = t # keep track of boundary triangles on the hull
-            hullSize+=1
+            self.hullTri[i] = self._legalize(t + 2, coords)
+            self.hullTri[e] = t  # keep track of boundary triangles on the hull
+            hullSize += 1
 
             # walk forward through the hull, adding more triangles and flipping recursively
             n = self.hullNext[e]
@@ -225,9 +225,9 @@ class Delaunator:
                 q = self.hullNext[n]
                 if not (orient(x, y, coords[2 * n], coords[2 * n + 1], coords[2 * q], coords[2 * q + 1])): break
                 t = self._addTriangle(n, i, q, self.hullTri[i], -1, self.hullTri[n])
-                self.hullTri[i] = self._legalize(t + 2,coords)
-                self.hullNext[n] = n # mark as removed
-                hullSize-=1
+                self.hullTri[i] = self._legalize(t + 2, coords)
+                self.hullNext[n] = n  # mark as removed
+                hullSize -= 1
                 n = q
 
             # walk backward from the other side, adding more triangles and flipping
@@ -236,10 +236,10 @@ class Delaunator:
                     q = self.hullPrev[e]
                     if not (orient(x, y, coords[2 * q], coords[2 * q + 1], coords[2 * e], coords[2 * e + 1])): break
                     t = self._addTriangle(q, i, e, -1, self.hullTri[e], self.hullTri[q])
-                    self._legalize(t + 2,coords)
+                    self._legalize(t + 2, coords)
                     self.hullTri[q] = t
-                    self.hullNext[e] = e # mark as removed
-                    hullSize-=1
+                    self.hullNext[e] = e  # mark as removed
+                    hullSize -= 1
                     e = q
 
             # update the hull indices
@@ -253,7 +253,7 @@ class Delaunator:
 
         self.hull = [None] * hullSize
         e = self._hullStart
-        for i in range(0,hullSize):
+        for i in range(0, hullSize):
             self.hull[i] = e
             e = self.hullNext[e]
 
@@ -263,10 +263,10 @@ class Delaunator:
 
         return self.triangles
 
-    def _hashKey(self,x, y):
+    def _hashKey(self, x, y):
         return math.floor(pseudoAngle(x - self._cx, y - self._cy) * self.hashSize) % self.hashSize
 
-    def _legalize(self,a,coords):
+    def _legalize(self, a, coords):
         i = 0
         ar = 0
 
@@ -293,9 +293,9 @@ class Delaunator:
             a0 = a - a % 3
             ar = a0 + (a + 2) % 3
 
-            if (b == -1): # convex hull edge
+            if (b == -1):  # convex hull edge
                 if (i == 0): break
-                i-=1
+                i -= 1
                 a = EDGE_STACK[i]
                 continue
 
@@ -323,7 +323,7 @@ class Delaunator:
                 # edge swapped on the other side of the hull (rare); fix the halfedge reference
                 if (hbl == -1):
                     e = self._hullStart
-                    
+
                     while True:
                         if (self.hullTri[e] == bl):
                             self.hullTri[e] = a
@@ -341,22 +341,22 @@ class Delaunator:
                 # don't worry about hitting the cap: it can only happen on extremely degenerate input
                 if (i < len(EDGE_STACK)):
                     EDGE_STACK[i] = br
-                    i+=1
+                    i += 1
 
             else:
                 if (i == 0): break
-                i-=1
+                i -= 1
                 a = EDGE_STACK[i]
 
         return ar
 
-    def _link(self,a, b):
+    def _link(self, a, b):
         self._halfedges[a] = b
         if (b != -1):
             self._halfedges[b] = a
 
     # add a new triangle given vertex indices and adjacent half-edge ids
-    def _addTriangle(self,i0, i1, i2, a, b, c):
+    def _addTriangle(self, i0, i1, i2, a, b, c):
         t = self.trianglesLen
 
         self._triangles[t] = i0
@@ -371,19 +371,22 @@ class Delaunator:
 
         return t
 
+
 # monotonically increases with real angle, but doesn't need expensive trigonometry
 def pseudoAngle(dx, dy):
     p = dx / (abs(dx) + abs(dy))
 
     if (dy > 0):
-        return (3 - p) / 4 # [0..1]
+        return (3 - p) / 4  # [0..1]
     else:
-        return (1 + p) / 4 # [0..1]
+        return (1 + p) / 4  # [0..1]
+
 
 def dist(ax, ay, bx, by):
     dx = ax - bx
     dy = ay - by
     return dx * dx + dy * dy
+
 
 # return 2d orientation sign if we're confident in it through J. Shewchuk's error bound check
 def orientIfSure(px, py, rx, ry, qx, qy):
@@ -395,11 +398,13 @@ def orientIfSure(px, py, rx, ry, qx, qy):
     else:
         return 0
 
+
 # a more robust orientation test that's stable in a given triangle (to fix robustness issues)
 def orient(rx, ry, qx, qy, px, py):
-    return (orientIfSure(px, py, rx, ry, qx, qy) or\
-        orientIfSure(rx, ry, qx, qy, px, py) or\
-        orientIfSure(qx, qy, px, py, rx, ry)) < 0
+    return (orientIfSure(px, py, rx, ry, qx, qy) or
+            orientIfSure(rx, ry, qx, qy, px, py) or
+            orientIfSure(qx, qy, px, py, rx, ry)) < 0
+
 
 def inCircle(ax, ay, bx, by, cx, cy, px, py):
     dx = ax - px
@@ -413,9 +418,10 @@ def inCircle(ax, ay, bx, by, cx, cy, px, py):
     bp = ex * ex + ey * ey
     cp = fx * fx + fy * fy
 
-    return dx * (ey * cp - bp * fy) -\
-           dy * (ex * cp - bp * fx) +\
+    return dx * (ey * cp - bp * fy) - \
+           dy * (ex * cp - bp * fx) + \
            ap * (ex * fy - ey * fx) < 0
+
 
 def circumradius(ax, ay, bx, by, cx, cy):
     dx = bx - ax
@@ -425,12 +431,13 @@ def circumradius(ax, ay, bx, by, cx, cy):
 
     bl = dx * dx + dy * dy
     cl = ex * ex + ey * ey
-    d = 0.5/(dx * ey - dy * ex)
+    d = 0.5 / (dx * ey - dy * ex)
 
     x = (ey * bl - dy * cl) * d
     y = (dx * cl - ex * bl) * d
 
-    return x*x + y*y
+    return x * x + y * y
+
 
 def circumcenter(ax, ay, bx, by, cx, cy):
     dx = bx - ax
@@ -440,23 +447,24 @@ def circumcenter(ax, ay, bx, by, cx, cy):
 
     bl = dx * dx + dy * dy
     cl = ex * ex + ey * ey
-    d = 0.5/(dx * ey - dy * ex)
+    d = 0.5 / (dx * ey - dy * ex)
 
     x = ax + (ey * bl - dy * cl) * d
     y = ay + (dx * cl - ex * bl) * d
 
     return x, y
 
+
 def quicksort(ids, dists, left, right):
-    if (right - left <= 20):
-        for i in range(left + 1,right+1):
+    if right - left <= 20:
+        for i in range(left + 1, right + 1):
             temp = ids[i]
             tempDist = dists[temp]
-            j = i-1
-            while (j >= left and dists[ids[j]] > tempDist):
+            j = i - 1
+            while j >= left and dists[ids[j]] > tempDist:
                 ids[j + 1] = ids[j]
-                j-=1
-            ids[j + 1] = temp;
+                j -= 1
+            ids[j + 1] = temp
 
     else:
         median = (left + right) >> 1
@@ -464,13 +472,13 @@ def quicksort(ids, dists, left, right):
         j = right
         swap(ids, median, i)
 
-        if (dists[ids[left]] > dists[ids[right]]):
+        if dists[ids[left]] > dists[ids[right]]:
             swap(ids, left, right)
 
-        if (dists[ids[i]] > dists[ids[right]]):
+        if dists[ids[i]] > dists[ids[right]]:
             swap(ids, i, right)
 
-        if (dists[ids[left]] > dists[ids[i]]):
+        if dists[ids[left]] > dists[ids[i]]:
             swap(ids, left, i)
 
         temp = ids[i]
@@ -478,26 +486,28 @@ def quicksort(ids, dists, left, right):
 
         while True:
             while True:
-                i+=1
-                if (dists[ids[i]] >= tempDist): break
+                i += 1
+                if dists[ids[i]] >= tempDist: break
 
             while True:
-                j-=1
-                if (dists[ids[j]] <= tempDist): break
+                j -= 1
+                if dists[ids[j]] <= tempDist: break
 
-            if (j < i): break
-            swap(ids, i, j);
+            if j < i:
+                break
+            swap(ids, i, j)
 
-        ids[left + 1] = ids[j];
-        ids[j] = temp;
+        ids[left + 1] = ids[j]
+        ids[j] = temp
 
-        if (right - i + 1 >= j - left):
+        if right - i + 1 >= j - left:
             quicksort(ids, dists, i, right)
             quicksort(ids, dists, left, j - 1)
 
         else:
             quicksort(ids, dists, left, j - 1)
             quicksort(ids, dists, i, right)
+
 
 def swap(arr, i, j):
     tmp = arr[i]
